@@ -1,0 +1,25 @@
+@startuml
+
+' Define the components
+component "Web Application" as web_app
+component "API Gateway" as api_gateway
+component "Lambda Functions" as lambda_functions
+component "DynamoDB" as dynamodb
+component "S3 Bucket" as s3_bucket
+component "CloudFront" as cloudfront
+
+' Define the connections
+web_app --> api_gateway
+api_gateway --> lambda_functions
+lambda_functions --> dynamodb
+lambda_functions --> s3_bucket
+web_app --> cloudfront
+
+' Add labels to the connections
+web_app --> api_gateway : HTTPS
+api_gateway --> lambda_functions : HTTPS
+lambda_functions --> dynamodb : DynamoDB API
+lambda_functions --> s3_bucket : S3 API
+web_app --> cloudfront : HTTPS
+
+@enduml
