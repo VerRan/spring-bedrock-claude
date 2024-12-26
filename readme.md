@@ -1,4 +1,4 @@
-# Cloud3-POC: Amazon Bedrock Claude3 流式推理集成
+# spring-bedrock-claude: Amazon Bedrock Claude3 流式推理集成
 
 本项目展示了如何在 Spring Boot 应用程序中集成 Amazon Bedrock Claude3 模型，实现同步、异步和流式推理功能。
 
@@ -42,7 +42,7 @@ src/main/java/com/lht/
 
 1. 克隆项目:
 ```bash
-git clone https://github.com/yourusername/Cloud3-POC.git
+git clone https://github.com/yourusername/spring-bedrock-claude.git
 ```
 
 2. 配置 AWS 凭证
