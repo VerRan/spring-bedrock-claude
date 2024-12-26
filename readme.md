@@ -1,94 +1,126 @@
-在 SpringBoot 中集成 Amazon Bedrock  Claude3 实现流式推理
+# Cloud3-POC: Amazon Bedrock Claude3 流式推理集成
 
-背景
+本项目展示了如何在 Spring Boot 应用程序中集成 Amazon Bedrock Claude3 模型，实现同步、异步和流式推理功能。
 
-随着机器学习模型的不断发展和应用场景的扩展,企业越来越需要将模型集成到自己的应用程序中,以提供更智能和个性化的服务。Amazon Bedrock 是一个开源的机器学习模型服务框架,旨在简化模型的部署和管理。本文将介绍如何将 Amazon Bedrock 集成到基于 Spring Boot 的 Java 应用程序中,实现流式推理功能。
+## 项目背景
 
+随着机器学习模型的不断发展和应用场景的扩展，企业越来越需要将模型集成到自己的应用程序中，以提供更智能和个性化的服务。本项目展示了如何使用 Amazon Bedrock 服务来集成 Claude3 模型，并实现不同的调用模式。
 
-目标
+## 功能特点
 
-1. 支持在 Java 应用程序中集成 Amazon Bedrock。
-2. 支持基于 Spring Boot 的流式推理,使用 Spring MVC 的 Server-Sent Events (SSE) 技术。
+- **同步调用**: 通过 `InvokeModel` 实现直接模型调用
+- **异步调用**: 通过 `InvokeModelAsync` 实现非阻塞式调用
+- **流式响应**: 通过 `InvokeModelWithResponseStream` 实现实时流式响应
+- **Spring Boot 集成**: 提供基于 Spring MVC 的 API 端点
+- **SSE 支持**: 使用 Server-Sent Events 实现流式数据推送
 
-解决方案
+## 项目结构
 
-1. 集成 Amazon Bedrock
+```
+src/main/java/com/lht/
+├── Application.java                    # 应用程序入口
+├── app/
+│   ├── BedrockRuntimeUsageDemo.java   # Bedrock运行时示例
+│   └── Claude3.java                   # Claude3 模型实现
+├── controller/
+│   └── ControllerV3.java             # API控制器
+└── runtime/
+    ├── AppController.java            # 应用控制器
+    ├── InvokeModel.java             # 同步调用实现
+    ├── InvokeModelAsync.java        # 异步调用实现
+    └── InvokeModelWithResponseStream.java # 流式响应实现
+```
 
-首先,我们需要将 Amazon Bedrock 集成到 Spring Boot 应用程序中。可以参考 AWS 提供的 Amazon Bedrock Java 示例。
-以下是集成步骤:
+## 环境要求
 
-1. 添加 Amazon Bedrock 依赖到项目中。
-2. 创建一个 Bedrock 实例,指定需要使用的模型
-3. 编写推理代码,调用 Bedrock 实例进行推理。
+- Java 8 或更高版本
+- Maven
+- AWS 账号和 Bedrock 访问权限
+- 配置好的 AWS 凭证
 
-2. 实现流式推理
+## 快速开始
 
-为了实现流式推理,我们将使用 Spring MVC 的 Server-Sent Events (SSE) 技术。SSE 允许服务器向客户端推送数据,而无需客户端主动请求。
+1. 克隆项目:
+```bash
+git clone https://github.com/yourusername/Cloud3-POC.git
+```
 
-以下是实现步骤:
+2. 配置 AWS 凭证
 
-1. 创建一个 Spring MVC 控制器,提供 SSE 端点。
-2. 在控制器中,创建一个 SseEmitter 实例,用于向客户端推送数据。
-3. 创建一个新线程,在该线程中执行推理逻辑。
-4. 在推理逻辑中,将推理结果通过 SseEmitter 推送给客户端。
+3. 构建项目:
+```bash
+mvn clean install
+```
 
+## 使用示例
+
+### 同步调用
+```java
+InvokeModel invokeModel = new InvokeModel();
+String response = invokeModel.invoke(prompt);
+```
+
+### 异步调用
+```java
+InvokeModelAsync asyncModel = new InvokeModelAsync();
+CompletableFuture<String> future = asyncModel.invokeAsync(prompt);
+```
+
+### 流式调用
+```java
+InvokeModelWithResponseStream streamingModel = new InvokeModelWithResponseStream();
+streamingModel.invokeStream(prompt, response -> {
+    // 处理流式响应
+});
+```
+
+### SSE 控制器示例
+```java
 @RestController
-public class InferenceController {
-
-    private final BedRockInferenceService inferenceService;
-
-    public InferenceController(BedRockInferenceService inferenceService) {
-        this.inferenceService = inferenceService;
-    }
-
-    @GetMapping("/inference")
-    public SseEmitter streamInference() {
+public class ControllerV3 {
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamResponse() {
         SseEmitter emitter = new SseEmitter();
-
-        // 在新线程中执行推理逻辑
-        new Thread(() -> {
-            try {
-                // 执行推理逻辑
-                List<InferenceResult> results = inferenceService.performInference();
-
-                // 将推理结果推送给客户端
-                for (InferenceResult result : results) {
-                    emitter.send(result);
-                }
-
-                emitter.complete();
-            } catch (Exception ex) {
-                emitter.completeWithError(ex);
-            }
-        }).start();
-
+        // 实现流式响应逻辑
         return emitter;
     }
 }
+```
 
-3. 确保线程安全和一致性
+## 配置说明
 
-为了确保线程安全和一致性,我们将 SSE 和推理代码放在同一个线程中。这样可以避免潜在的线程安全问题,并保证推理结果的顺序性。在上面的示例代码中,我们在新线程中执行推理逻辑,并将推理结果通过 SseEmitter 推送给客户端。这种方式确保了 SSE 和推理代码在同一个线程中执行,从而保证了线程安全和一致性。
+项目配置通过 `application.yaml` 文件管理，主要包括：
+- AWS 区域设置
+- 模型配置
+- 应用程序特定配置
 
+## 常见问题
 
-总结
+### 依赖冲突
+在集成 Amazon Bedrock 时可能遇到依赖冲突问题。解决方案：
+1. 使用 Maven 依赖管理排除冲突依赖
+2. 确保使用兼容的依赖版本
 
-本文介绍了如何在 Spring Boot 应用程序中集成 Amazon Bedrock,并实现了基于 SSE 的流式推理功能。通过将 SSE 和推理代码放在同一个线程中,我们确保了线程安全和一致性。这种集成方式为企业提供了一种灵活和高效的方式,将机器学习模型集成到自己的应用程序中,从而提供更智能和个性化的服务。
+### 线程安全
+为确保推理结果的顺序性和一致性：
+1. SSE 和推理代码放在同一线程中执行
+2. 使用适当的线程同步机制
+3. 注意异步操作的异常处理
 
+## 参考资源
 
-参考资源
+- [Amazon Bedrock 文档](https://docs.aws.amazon.com/bedrock/)
+- [Spring Boot SSE 指南](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-async.html)
+- [Claude3 API 文档](https://docs.anthropic.com/claude/reference/getting-started-with-the-api)
 
-* Amazon Bedrock Java 示例
-* Amazon Bedrock 集成 Workshop
-* Spring Boot Server-Sent Events
+## 日志配置
 
-FAQ
+项目使用 log4j 进行日志管理，配置文件位于 `src/main/resources/log4j.properties`。
 
-依赖冲突问题
+## 贡献指南
 
-在集成 Amazon Bedrock 时,可能会遇到依赖冲突问题。这种情况通常发生在项目中使用了与 Bedrock 依赖的不同版本的库时。可以通过排除冲突依赖或者使用 Maven 的依赖管理功能来解决这个问题。
+欢迎提交 Issues 和 Pull Requests 来改进项目。
 
+## 许可证
 
-线程一致性问题
-
-为了确保推理结果的顺序性和一致性,我们将 SSE 和推理代码放在同一个线程中执行。这样可以避免潜在的线程安全问题,并保证推理结果的顺序性。如果将 SSE 和推理代码分开执行,可能会导致推理结果乱序或者丢失。
+[添加许可证信息]
