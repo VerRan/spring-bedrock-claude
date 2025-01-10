@@ -1,101 +1,101 @@
-# spring-bedrock-claude: Amazon Bedrock Claude3 流式推理集成
+# BedrockAIStreamer: AWS Bedrock AI Models Integration with Streaming
 
-本项目展示了如何在 Spring Boot 应用程序中集成 Amazon Bedrock Claude3 模型，实现同步、异步和流式推理功能。
+This project demonstrates how to integrate AWS Bedrock AI models (Claude3 and Nova Lite) into a Spring Boot application, implementing streaming inference functionality.
 
-## 项目背景
+## Project Background
 
-随着机器学习模型的不断发展和应用场景的扩展，企业越来越需要将模型集成到自己的应用程序中，以提供更智能和个性化的服务。本项目展示了如何使用 Amazon Bedrock 服务来集成 Claude3 模型，并实现不同的调用模式。
+As machine learning models continue to evolve and their application scenarios expand, businesses increasingly need to integrate these models into their applications to provide more intelligent and personalized services. This project showcases how to use the AWS Bedrock service to integrate Claude3 and Nova Lite models, implementing streaming response patterns.
 
-## 功能特点
+## Features
 
-- **同步调用**: 通过 `InvokeModel` 实现直接模型调用
-- **异步调用**: 通过 `InvokeModelAsync` 实现非阻塞式调用
-- **流式响应**: 通过 `InvokeModelWithResponseStream` 实现实时流式响应
-- **Spring Boot 集成**: 提供基于 Spring MVC 的 API 端点
-- **SSE 支持**: 使用 Server-Sent Events 实现流式数据推送
+- **Streaming Responses**: Implements real-time streaming responses using `InvokeModelWithResponseStream`
+- **Spring Boot Integration**: Provides API endpoints based on Spring MVC
+- **SSE Support**: Uses Server-Sent Events to implement streaming data push
+- **Multiple AI Models**: Supports both Claude3 and Nova Lite models from AWS Bedrock
 
-## 项目结构
+## Project Structure
 
 ```
 src/main/java/com/lht/
-├── Application.java                    # 应用程序入口
-├── app/
-│   ├── BedrockRuntimeUsageDemo.java   # Bedrock运行时示例
-│   └── Claude3.java                   # Claude3 模型实现
+├── Application.java           # Application entry point
 ├── controller/
-│   └── ControllerV3.java             # API控制器
-└── runtime/
-    ├── AppController.java            # 应用控制器
-    ├── InvokeModel.java             # 同步调用实现
-    ├── InvokeModelAsync.java        # 异步调用实现
-    └── InvokeModelWithResponseStream.java # 流式响应实现
+│   └── AIController.java      # API controller for AI endpoints
+├── service/
+│   ├── AIService.java         # Interface for AI service
+│   └── AIServiceImpl.java     # Implementation of AI service
 ```
 
-## 环境要求
+## Requirements
 
-- Java 8 或更高版本
+- Java 17 or higher
 - Maven
-- AWS 账号和 Bedrock 访问权限
-- 配置好的 AWS 凭证
+- AWS account with Bedrock access permissions
+- Configured AWS credentials
 
-## 快速开始
+## Quick Start
 
-1. 克隆项目:
+1. Clone the project:
 ```bash
-git clone https://github.com/yourusername/spring-bedrock-claude.git
+git clone https://github.com/yourusername/bedrock-ai-streamer.git
 ```
 
-2. 配置 AWS 凭证
+2. Configure AWS credentials
 
-3. 构建项目:
+3. Build the project:
 ```bash
 mvn clean install
 ```
 
-## 使用示例
-
-### 同步调用
-```java
-InvokeModel invokeModel = new InvokeModel();
-String response = invokeModel.invoke(prompt);
+4. Run the application:
+```bash
+mvn spring-boot:run
 ```
 
-### 异步调用
-```java
-InvokeModelAsync asyncModel = new InvokeModelAsync();
-CompletableFuture<String> future = asyncModel.invokeAsync(prompt);
+## Usage Examples
+
+### Streaming API Endpoints
+
+- `/stream-sse-mvc`: Simple SSE streaming example
+- `/claude3_stream`: Streaming responses from Claude3 model
+- `/nova_stream`: Streaming responses from Nova Lite model
+
+Example usage with curl:
+```bash
+curl http://localhost:8080/claude3_stream
 ```
 
-### 流式调用
-```java
-InvokeModelWithResponseStream streamingModel = new InvokeModelWithResponseStream();
-streamingModel.invokeStream(prompt, response -> {
-    // 处理流式响应
-});
-```
+## Configuration
 
-### SSE 控制器示例
-```java
-@RestController
-public class ControllerV3 {
-    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamResponse() {
-        SseEmitter emitter = new SseEmitter();
-        // 实现流式响应逻辑
-        return emitter;
-    }
-}
-```
+The project configuration is managed through the `application.yaml` file, which includes:
+- AWS region settings
+- Model configurations
+- Application-specific settings
 
-## 配置说明
+## Logging
 
-项目配置通过 `application.yaml` 文件管理，主要包括：
-- AWS 区域设置
-- 模型配置
-- 应用程序特定配置
+The project uses Spring Boot's default logging. You can configure logging levels in the `application.yaml` file.
 
-## 常见问题
+## Common Issues
 
+### Thread Safety
+To ensure the order and consistency of inference results:
+1. SSE and inference code are executed in the same thread
+2. Appropriate thread synchronization mechanisms are used
+3. Pay attention to exception handling in asynchronous operations
+
+## References
+
+- [Amazon Bedrock Documentation](https://docs.aws.amazon.com/bedrock/)
+- [Spring Boot SSE Guide](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-async.html)
+- [Claude3 API Documentation](https://docs.anthropic.com/claude/reference/getting-started-with-the-api)
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests to improve the project.
+
+## License
+
+[Add license information]
 ### 依赖冲突
 在集成 Amazon Bedrock 时可能遇到依赖冲突问题。解决方案：
 1. 使用 Maven 依赖管理排除冲突依赖
